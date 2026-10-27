@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>קיר הגורלות - סמלי מדינת ישראל</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" defer crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;min-height:100vh;background:radial-gradient(circle at 50% 20%, #1e293b 0%, #0f172a 100%);font-family:'Heebo',sans-serif;color:#0f172a;overflow-x:hidden;}
+button{font-family:inherit;}
+.app-container{position:relative;z-index:1;width:100%;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:15px;}
+.header{text-align:center;margin-bottom:15px;}
+.header h1{font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:900;color:#ffffff;letter-spacing:-0.03em;text-shadow:0 4px 15px rgba(0,0,0,0.5);}
+.header p{font-size:1.1rem;color:#94a3b8;margin-top:4px;font-weight:500;}
+
+/* host-only elements are never shown to cadets */
+body:not(.is-host) .host-only{display:none !important;}
+
+.panel{display:none;width:100%;max-width:1000px;background:rgba(255,255,255,0.95);border-radius:24px;padding:25px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);}
+.panel.active{display:block;animation:fadeIn 0.4s ease-out;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+.btn{width:100%;padding:14px 24px;font-size:1.1rem;font-weight:700;border:none;border-radius:14px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;cursor:pointer;box-shadow:0 10px 25px rgba(37,99,235,0.3);transition:all 0.25s ease;}
+.btn:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.05);}
+.btn:focus-visible,.door:focus-visible,.team-card:focus-visible,.option-btn:focus-visible,.input-field:focus-visible,.icon-btn:focus-visible{outline:3px solid #fbbf24;outline-offset:2px;}
+.btn:disabled{background:#94a3b8;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-danger{background:linear-gradient(135deg,#dc2626,#991b1b);}
+.btn-success{background:linear-gradient(135deg,#059669,#047857);}
+.btn-ghost{background:transparent;color:#475569;box-shadow:none;}
+.btn-ghost:hover:not(:disabled){background:rgba(0,0,0,0.04);}
+
+.input-field{width:100%;padding:14px 18px;border-radius:12px;border:2px solid #cbd5e1;background:#f8fafc;font-size:1.1rem;margin-bottom:15px;font-family:'Heebo',sans-serif;outline:none;}
+.input-field:focus{border-color:#2563eb;background:#fff;}
+
+.teams-grid{display:flex;gap:15px;margin:15px 0;}
+.team-card{flex:1;border:2.5px solid #cbd5e1;border-radius:16px;padding:18px;text-align:center;background:#fff;cursor:pointer;transition:all 0.25s ease;color:inherit;font-size:1rem;}
+.team-card.zionist.selected{border-color:#2563eb;background:rgba(37,99,235,0.06);}
+.team-card.brigade.selected{border-color:#ea580c;background:rgba(234,88,12,0.06);}
+.team-card.static{cursor:default;}
+
+.team-badge{display:inline-block;font-weight:900;padding:6px 16px;border-radius:999px;margin-bottom:12px;font-size:1rem;}
+.team-badge.zionist{background:rgba(37,99,235,0.12);color:#1d4ed8;}
+.team-badge.brigade{background:rgba(234,88,12,0.12);color:#c2410c;}
+
+/* Wall of fates */
+.fates-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:15px;}
+.door-scene{width:100%;height:75px;perspective:1000px;}
+.door{
+  width:100%;height:100%;
+  background:linear-gradient(135deg,#1e3a8a,#2563eb);
+  color:#fff;border-radius:12px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:0.85rem;font-weight:700;cursor:pointer;text-align:center;padding:4px;
+  transition:transform 0.6s cubic-bezier(0.4,0.2,0.2,1),box-shadow 0.3s ease,border 0.3s ease;
+  transform-style:preserve-3d;
+  box-shadow:0 4px 12px rgba(30,58,138,0.25);
+  border:2px solid transparent;position:relative;
+}
+.door:hover:not(.locked):not(.opened){filter:brightness(1.1);transform:translateY(-2px);}
+.door.locked{cursor:default;}
+.door.pickable-zionist{box-shadow:0 0 0 3px rgba(96,165,250,0.7),0 4px 12px rgba(30,58,138,0.25);}
+.door.pickable-brigade{box-shadow:0 0 0 3px rgba(251,146,60,0.7),0 4px 12px rgba(30,58,138,0.25);}
+.door.pickable-zionist:hover{outline:4px dashed #60a5fa;outline-offset:3px;}
+.door.pickable-brigade:hover{outline:4px dashed #fb923c;outline-offset:3px;}
+.door.dim{opacity:0.4;filter:grayscale(0.5);}
+.door.selected-zionist{background:linear-gradient(135deg,#1d4ed8,#38bdf8);border:4px solid #fff;font-size:1rem;box-shadow:0 0 0 4px #2563eb,0 0 26px 6px rgba(56,189,248,0.95);animation:pulseZionist 1.2s infinite alternate;}
+.door.selected-brigade{background:linear-gradient(135deg,#c2410c,#fbbf24);border:4px solid #fff;font-size:1rem;box-shadow:0 0 0 4px #ea580c,0 0 26px 6px rgba(251,146,60,0.95);animation:pulseBrigade 1.2s infinite alternate;}
+@keyframes pulseZionist{from{transform:scale(1);}to{transform:scale(1.06);}}
+@keyframes pulseBrigade{from{transform:scale(1);}to{transform:scale(1.06);}}
+@keyframes flipIn{from{transform:rotateY(-90deg) scale(0.95);}to{transform:rotateY(0) scale(1);}}
+.pick-badge{position:absolute;top:-11px;left:-11px;width:30px;height:30px;border-radius:50%;background:#fff;color:#0f172a;font-weight:900;font-size:0.95rem;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.45);border:2px solid currentColor;}
+.door.selected-zionist .pick-badge{color:#1d4ed8;}
+.door.selected-brigade .pick-badge{color:#c2410c;}
+
+.turn-banner{margin:10px 0;padding:14px 16px;border-radius:14px;text-align:center;font-weight:900;font-size:1.3rem;color:#fff;box-shadow:0 6px 18px rgba(0,0,0,0.2);}
+.turn-banner.zionist{background:linear-gradient(135deg,#1d4ed8,#38bdf8);}
+.turn-banner.brigade{background:linear-gradient(135deg,#c2410c,#f59e0b);}
+.turn-banner.neutral{background:linear-gradient(135deg,#334155,#64748b);}
+.wall-progress{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0;}
+.wp-card{border-radius:14px;padding:10px 14px;border:3px solid #e2e8f0;background:#f8fafc;text-align:right;transition:all 0.3s ease;}
+.wp-card.zionist.active{background:#dbeafe;border-color:#2563eb;transform:scale(1.02);box-shadow:0 6px 18px rgba(37,99,235,0.35);}
+.wp-card.brigade.active{background:#ffedd5;border-color:#ea580c;transform:scale(1.02);box-shadow:0 6px 18px rgba(234,88,12,0.35);}
+.wp-title{font-weight:900;font-size:1.05rem;}
+.wp-card.zionist .wp-title{color:#1d4ed8;}
+.wp-card.brigade .wp-title{color:#c2410c;}
+.wp-count{font-size:1.5rem;font-weight:900;color:#0f172a;margin-top:2px;}
+.wp-dots{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.wp-dot{width:18px;height:18px;border-radius:50%;border:2px solid #94a3b8;background:#fff;}
+.wp-dot.filled.zionist{background:#2563eb;border-color:#1d4ed8;}
+.wp-dot.filled.brigade{background:#ea580c;border-color:#c2410c;}
+.wp-note{font-weight:900;font-size:0.95rem;margin-top:6px;color:#475569;}
+.wp-card.active .wp-note{color:#0f172a;}
+.door.rotating{transform:rotateY(90deg) scale(0.95);animation:none;}
+.door.opened{background:#e2e8f0;color:#334155;cursor:default;transform:rotateY(0deg);box-shadow:none;border-color:#cbd5e1;font-size:0.8rem;}
+.door.opened.flip-in{animation:flipIn 0.5s ease-out;}
+.door.opened.positive{background:#dcfce7;color:#166534;border-color:#86efac;}
+.door.opened.negative{background:#fee2e2;color:#991b1b;border-color:#fca5a5;}
+.door.opened.special{background:linear-gradient(135deg,#fef08a,#f59e0b);color:#78350f;border-color:#f59e0b;font-size:0.9rem;}
+.door small{font-size:0.72rem;}
+
+.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:15px;}
+.option-btn{padding:14px;font-size:1.05rem;font-weight:700;border:2px solid #cbd5e1;border-radius:14px;background:#fff;cursor:pointer;color:#0f172a;transition:all 0.2s ease;}
+.option-btn:hover:not(:disabled){border-color:#2563eb;background:#eff6ff;}
+.option-btn:disabled{cursor:default;opacity:0.75;}
+.option-btn.chosen{border-color:#2563eb;background:#dbeafe;opacity:1;}
+
+.players-list{margin-top:10px;max-height:120px;overflow-y:auto;text-align:right;font-size:0.9rem;color:#475569;background:#f8fafc;padding:8px;border-radius:8px;border:1px solid #e2e8f0;}
+.players-list ul{list-style-type:disc;padding-right:18px;}
+
+.timer-box{font-size:1.3rem;font-weight:900;color:#dc2626;background:#fee2e2;padding:8px 16px;border-radius:10px;display:inline-block;margin-bottom:12px;}
+.timer-box.urgent{animation:urgent 0.6s infinite alternate;}
+@keyframes urgent{from{transform:scale(1);}to{transform:scale(1.07);}}
+
+.feedback-banner{padding:14px;border-radius:12px;font-size:1.15rem;font-weight:700;text-align:center;margin-bottom:15px;animation:fadeIn 0.3s ease-out;}
+.feedback-banner.success{background:#dcfce7;color:#166534;border:1px solid #86efac;}
+.feedback-banner.error{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;}
+
+.target-cadet-highlight{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #3b82f6;padding:15px;border-radius:16px;margin-bottom:15px;font-size:1.3rem;font-weight:900;color:#1e3a8a;box-shadow:0 4px 15px rgba(37,99,235,0.15);}
+.target-name{font-size:1.6rem;color:#ea580c;}
+
+.live-question-box{margin:15px 0;font-size:1.3rem;font-weight:700;color:#1e3a8a;background:#f8fafc;padding:20px;border-radius:16px;border:1px solid #e2e8f0;text-align:right;}
+.live-q{font-size:1.5rem;color:#1e3a8a;margin-bottom:15px;font-weight:900;}
+.live-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.live-opt{padding:14px;border-radius:12px;background:#fff;color:#0f172a;border:2px solid #cbd5e1;font-weight:700;font-size:1.05rem;}
+.live-opt.correct{background:#dcfce7;color:#166534;border:3px solid #16a34a;}
+.live-opt.wrong{background:#fee2e2;color:#991b1b;border:3px solid #dc2626;}
+.live-result{margin-top:14px;font-size:1.2rem;font-weight:900;text-align:center;}
+
+/* Tug of war */
+.tug-container{width:100%;max-width:700px;margin:10px auto 6px;background:#cbd5e1;height:28px;border-radius:14px;display:flex;overflow:hidden;box-shadow:inset 0 2px 6px rgba(0,0,0,0.2);border:2px solid #94a3b8;}
+.tug-caption{text-align:center;font-size:0.85rem;color:#64748b;font-weight:700;margin-bottom:14px;}
+.tug-zionist{background:linear-gradient(90deg,#1e3a8a,#3b82f6);height:100%;transition:width 0.6s cubic-bezier(0.4,0,0.2,1);display:flex;align-items:center;padding:0 10px;color:#fff;font-weight:900;white-space:nowrap;overflow:hidden;}
+.tug-brigade{background:linear-gradient(270deg,#9a3412,#ea580c);height:100%;transition:width 0.6s cubic-bezier(0.4,0,0.2,1);display:flex;align-items:center;justify-content:flex-end;padding:0 10px;color:#fff;font-weight:900;white-space:nowrap;overflow:hidden;}
+
+/* Utilities */
+.icon-btn{position:fixed;top:10px;left:10px;z-index:50;width:44px;height:44px;border-radius:50%;border:none;background:rgba(255,255,255,0.15);color:#fff;font-size:1.3rem;cursor:pointer;}
+.icon-btn:hover{background:rgba(255,255,255,0.28);}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(30px);opacity:0;pointer-events:none;background:#0f172a;color:#fff;padding:12px 22px;border-radius:12px;font-weight:700;z-index:100;max-width:90vw;text-align:center;transition:all 0.3s ease;box-shadow:0 10px 30px rgba(0,0,0,0.4);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.error{background:#991b1b;}
+.toast.success{background:#166534;}
+.conn-banner{display:none;position:fixed;top:0;right:0;left:0;z-index:90;background:#dc2626;color:#fff;text-align:center;padding:8px;font-weight:700;}
+.conn-banner.show{display:block;}
+.join-link{display:flex;gap:10px;align-items:center;background:#f1f5f9;border:1px dashed #94a3b8;border-radius:12px;padding:10px 14px;margin:10px 0;direction:ltr;}
+.join-link span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.9rem;color:#334155;}
+.join-link button{width:auto;padding:8px 16px;font-size:0.9rem;direction:rtl;}
+
+@media (max-width:600px){
+  .options-grid,.live-opts{grid-template-columns:1fr;}
+  .fates-grid{grid-template-columns:repeat(3,1fr);}
+  .panel{padding:18px;}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;}
+}
+</style>
+</head>
+<body>
+<div id="conn-banner" class="conn-banner" role="alert">⚠️ אין חיבור לאינטרנט - המשחק ינסה להתחבר מחדש אוטומטית</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<button type="button" id="mute-btn" class="icon-btn" onclick="window.toggleMute()" aria-label="השתק או בטל השתקה">🔊</button>
+
+<div class="app-container">
+  <div class="header">
+    <h1>🏛️ קיר הגורלות</h1>
+    <p>סמלי מדינת ישראל - משחק חי לכיתה</p>
+  </div>
+
+  <!-- Role Selection Panel -->
+  <div id="role-panel" class="panel active" style="text-align:center;max-width:520px;">
+    <h2 style="color:#1e3a8a;margin-bottom:12px;font-size:1.8rem;">בחר את מצב הכניסה</h2>
+    <p style="margin-bottom:30px;color:#475569;font-size:1.1rem;">האם אתה מורה (מארח) או צוער (משתתף מהנייד)?</p>
+    <div style="display:flex;gap:15px;">
+      <button type="button" class="btn" onclick="window.enterHostMode()">מארח (מסך ראשי)</button>
+      <button type="button" class="btn" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);" onclick="window.enterCadetMode()">צוער (מהנייד)</button>
+    </div>
+  </div>
+
+  <!-- Cadet Join Panel -->
+  <div id="cadet-join-panel" class="panel" style="max-width:520px;">
+    <h2 style="color:#1e3a8a;margin-bottom:15px;text-align:center;font-size:1.8rem;">כניסת צוער למשחק</h2>
+    <label for="cadet-name" style="display:block;margin-bottom:6px;font-weight:700;">שם מלא:</label>
+    <input type="text" id="cadet-name" class="input-field" placeholder="הכנס את שמך המלא" maxlength="30" autocomplete="name">
+    <p style="margin-bottom:12px;font-weight:700;font-size:1.1rem;">בחר קבוצה:</p>
+    <div class="teams-grid">
+      <button type="button" class="team-card zionist" onclick="window.selectTeam('zionist')" id="box-zionist" aria-pressed="false">
+        <span style="font-size:2rem;">🔵</span>
+        <h3 style="color:#2563eb;">התנועה הציונית</h3>
+      </button>
+      <button type="button" class="team-card brigade" onclick="window.selectTeam('brigade')" id="box-brigade" aria-pressed="false">
+        <span style="font-size:2rem;">🟠</span>
+        <h3 style="color:#ea580c;">הבריגדה היהודית</h3>
+      </button>
+    </div>
+    <button type="button" class="btn" id="join-btn" style="margin-top:10px;" onclick="window.joinGameSubmit()">הצטרף למשחק!</button>
+    <button type="button" class="btn btn-ghost" style="margin-top:10px;" onclick="window.backToRoleSelect()">⬅ חזרה לבחירת תפקיד</button>
+  </div>
+
+  <!-- Cadet Waiting / Question Panel -->
+  <div id="cadet-waiting-panel" class="panel" style="max-width:650px;text-align:center;">
+    <div id="cadet-team-badge" class="team-badge"></div>
+    <div id="cadet-feedback-area" aria-live="polite"></div>
+    <h2 id="cadet-main-title" style="color:#1e3a8a;margin-bottom:15px;font-size:1.8rem;">ממתין לתחילת המשחק...</h2>
+    <p id="cadet-status-text" style="color:#475569;font-size:1.2rem;margin-bottom:20px;" aria-live="polite"></p>
+    <div id="cadet-question-container" style="display:none;text-align:right;">
+      <div id="timer-display" class="timer-box">⏳ 15 שניות</div>
+      <div id="cadet-q-text" style="font-size:1.35rem;font-weight:700;color:#1e3a8a;margin-bottom:20px;background:#f8fafc;padding:20px;border-radius:16px;border:1px solid #e2e8f0;"></div>
+      <div class="options-grid" id="cadet-options-grid"></div>
+    </div>
+    <div id="cadet-spinner" style="font-size:3.5rem;margin:20px 0;">⏳</div>
+    <div class="tug-container" id="cadet-tug-wrap">
+      <div id="cadet-tug-zionist" class="tug-zionist" style="width:50%;">ציונית 0</div>
+      <div id="cadet-tug-brigade" class="tug-brigade" style="width:50%;">0 בריגדה</div>
+    </div>
+    <div class="tug-caption" id="cadet-tug-caption">מפתחות שנצברו</div>
+    <button type="button" class="btn btn-ghost" style="margin-top:10px;font-size:0.9rem;" onclick="window.leaveGame()">החלף משתמש / צא</button>
+  </div>
+
+  <!-- Host Dashboard Panel -->
+  <div id="host-panel" class="panel host-only">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+      <h2 style="color:#1e3a8a;font-size:1.8rem;">לוח בקרה - מארח</h2>
+      <button type="button" class="btn" id="music-btn" style="width:auto;padding:8px 16px;background:#0f172a;" onclick="window.toggleEpicMusic()">🎵 מוזיקת מתח</button>
+    </div>
+    <p style="color:#475569;font-weight:700;">קישור להצטרפות הצוערים:</p>
+    <div class="join-link">
+      <span id="join-link-text"></span>
+      <button type="button" class="btn" onclick="window.copyJoinLink()">העתק</button>
+    </div>
+    <div class="teams-grid">
+      <div class="team-card zionist static">
+        <h3 style="color:#2563eb;">התנועה הציונית</h3>
+        <p id="count-zionist" style="font-size:2.5rem;font-weight:900;color:#2563eb;margin-top:10px;">0</p>
+        <div class="players-list" id="list-zionist"><ul><li>אין צוערים מחוברים</li></ul></div>
+      </div>
+      <div class="team-card brigade static">
+        <h3 style="color:#ea580c;">הבריגדה היהודית</h3>
+        <p id="count-brigade" style="font-size:2.5rem;font-weight:900;color:#ea580c;margin-top:10px;">0</p>
+        <div class="players-list" id="list-brigade"><ul><li>אין צוערים מחוברים</li></ul></div>
+      </div>
+    </div>
+    <div id="host-warning" style="color:#dc2626;font-weight:700;text-align:center;margin:15px 0;font-size:1.1rem;background:#fee2e2;padding:12px;border-radius:12px;display:none;">⚠️ נדרש לפחות צוער אחד בכל קבוצה כדי להתחיל את המשחק!</div>
+    <div style="display:flex;gap:15px;margin-top:25px;">
+      <button type="button" class="btn" id="start-btn" style="flex:2;" onclick="window.startTriviaPhase()" disabled>התחל משחק ▶</button>
+      <button type="button" class="btn btn-danger" style="flex:1;" onclick="window.resetGameServer(false)">איפוס מלא 🔄</button>
+    </div>
+  </div>
+
+  <!-- Host Live Trivia Panel -->
+  <div id="host-trivia-panel" class="panel host-only" style="text-align:center;">
+    <h2 style="color:#1e3a8a;margin-bottom:10px;font-size:1.8rem;" id="trivia-panel-heading">שאלת הפתעה בלייב</h2>
+    <div id="target-cadet-announcement" class="target-cadet-highlight" aria-live="polite">מגריל צוער...</div>
+    <div id="live-question-box" class="live-question-box">טוען שאלה...</div>
+
+    <div class="tug-container">
+      <div id="tug-zionist" class="tug-zionist" style="width:50%;">ציונית 0</div>
+      <div id="tug-brigade" class="tug-brigade" style="width:50%;">0 בריגדה</div>
+    </div>
+    <div class="tug-caption">מפתחות שנצברו</div>
+
+    <div style="display:flex;gap:12px;margin-top:5px;flex-wrap:wrap;">
+      <button type="button" class="btn" id="next-round-btn" style="flex:2;min-width:200px;" onclick="window.nextTriviaRound()" disabled>ממתין לתשובת הצוער...</button>
+      <button type="button" class="btn btn-ghost" id="skip-btn" style="flex:1;min-width:140px;border:2px solid #cbd5e1;" onclick="window.skipQuestion()" disabled>דלג (נחשב שגוי)</button>
+      <button type="button" class="btn btn-danger" style="flex:1;min-width:120px;" onclick="window.resetGameServer(false)">איפוס 🔄</button>
+    </div>
+  </div>
+
+  <!-- Wall of Fates Host Panel -->
+  <div id="wall-panel" class="panel host-only" style="max-width:1050px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+      <h2 style="color:#1e3a8a;font-size:1.6rem;">🏛️ קיר הגורלות</h2>
+      <div style="display:flex;gap:20px;font-weight:700;font-size:1.1rem;">
+        <span style="color:#2563eb;">מפתחות ציונית: <span id="wall-keys-zionist">0</span></span>
+        <span style="color:#ea580c;">מפתחות בריגדה: <span id="wall-keys-brigade">0</span></span>
+      </div>
+    </div>
+
+    <div class="tug-container" style="margin:5px auto 6px;">
+      <div id="wall-tug-zionist" class="tug-zionist" style="width:50%;">ציונית 0</div>
+      <div id="wall-tug-brigade" class="tug-brigade" style="width:50%;">0 בריגדה</div>
+    </div>
+    <div class="tug-caption">ניקוד</div>
+
+    <div id="wall-progress" class="wall-progress"></div>
+    <p id="wall-status-instruction" class="turn-banner neutral" aria-live="polite"></p>
+    <div class="fates-grid" id="fates-grid"></div>
+    <div style="margin-top:15px;text-align:center;display:flex;justify-content:center;gap:15px;flex-wrap:wrap;">
+      <button type="button" class="btn btn-success" id="reveal-doors-btn" style="max-width:320px;display:none;" onclick="window.revealNextSelectedDoor()">פתח דלת נבחרת הבאה 🚪✨</button>
+      <button type="button" class="btn btn-success" id="finish-btn" style="max-width:320px;display:none;" onclick="window.finishGame()">הכרז על המנצחת 🏆</button>
+      <button type="button" class="btn btn-danger" style="max-width:220px;" onclick="window.resetGameServer(false)">איפוס משחק 🔄</button>
+    </div>
+  </div>
+
+  <!-- Victory Panel -->
+  <div id="victory-panel" class="panel" style="text-align:center;">
+    <h2 style="font-size:2.8rem;color:#1e3a8a;margin-bottom:15px;">🏆 המשחק הסתיים! 🏆</h2>
+    <p id="victory-announcement" style="font-size:2.2rem;font-weight:900;margin:25px 0;line-height:1.4;"></p>
+    <p id="victory-scores" style="font-size:1.4rem;font-weight:700;color:#475569;"></p>
+    <p id="victory-cadet-note" style="font-size:1.3rem;font-weight:700;margin-top:15px;"></p>
+    <div style="font-size:4.5rem;margin:20px 0;">🎉🥇🎉</div>
+    <div class="host-only" style="margin-top:30px;display:flex;justify-content:center;gap:15px;flex-wrap:wrap;">
+      <button type="button" class="btn" style="max-width:300px;" onclick="window.resetGameServer(true)">משחק חוזר - אותם שחקנים 🔁</button>
+      <button type="button" class="btn btn-danger" style="max-width:300px;" onclick="window.resetGameServer(false)">איפוס מלא 🔄</button>
+    </div>
+    <p id="victory-wait-note" style="color:#64748b;margin-top:20px;">ממתינים שהמארח יתחיל משחק חדש...</p>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import {
+  getFirestore, collection, doc, setDoc, getDoc, onSnapshot, getDocs, deleteDoc,
+  updateDoc, runTransaction, writeBatch, deleteField, arrayUnion, arrayRemove
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+/* ------------------------------------------------------------------ *
+ * Firebase
+ * NOTE: a Firebase web config is an identifier, not a secret. Real
+ * protection must come from Firestore Security Rules (see notes).
+ * ------------------------------------------------------------------ */
+const firebaseConfig = {
+  apiKey: "AIzaSyBCtuW6-8bbUtlDeTYEAY_mA212Mr_LuNw",
+  authDomain: "haim-leom.firebaseapp.com",
+  projectId: "haim-leom",
+  storageBucket: "haim-leom.firebasestorage.app",
+  messagingSenderId: "743968217974",
+  appId: "1:743968217974:web:c623469cc7d592606a3857",
+  measurementId: "G-EE1PJYCWEW"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const STATE_REF = doc(db, "gamestate", "current");
+const PLAYERS = collection(db, "players");
+
+/* ------------------------------------------------------------------ *
+ * Game data
+ * ------------------------------------------------------------------ */
+// NOTE: `correct` is the index in the ORIGINAL options array. The order shown
+// on screen is shuffled per round (see optionOrder in the game state).
+const triviaQuestions = [
+  // 1
+  { q: "מה מאפיין את החלק הראשון של הלחן של ״התקווה״?", options: ["סולם מינורי (לה מינור) בעל אופי געגוע", "סולם מז'ורי בקצב מצעד מהיר ושמח", "קפיצה גדולה של אוקטבה בפתיחתו", "נעימה המבוססת על צלילי שופר בלבד"], correct: 0 },
+  // 2
+  { q: "מי שינה את מילות השיר ״תקוותנו״ של אימבר לאחר שנכתב?", options: ["יהודה לייב מטמון-כהן, מורה ומחנך", "שמואל כהן, מלחין הלחן", "בנימין זאב הרצל, מנהיג התנועה הציונית", "דוד בן-גוריון, ראש הממשלה הראשון"], correct: 0 },
+  // 3
+  { q: "איזו שורה מהנוסח המקורי של אימבר שינה מטמון-כהן?", options: ["לשוב לארץ אבותינו, לעיר בה דוד חנה", "כל עוד בלבב פנימה", "ולפאתי מזרח קדימה", "עוד לא אבדה תקוותנו"], correct: 0 },
+  // 4
+  { q: "מתי עוגן ״התקווה״ רשמית בחוק כהמנון המדינה?", options: ["בשנת 2004, כ-56 שנים אחרי קום המדינה", "בשנת 1948, בהכרזת העצמאות", "בשנת 1949, עם חוק הדגל והסמל", "בשנת 1967, אחרי מלחמת ששת הימים"], correct: 0 },
+  // 5
+  { q: "מה היה החזון שביטא דגל שבעת הכוכבים של הרצל?", options: ["מדינה סוציאלית ומתקדמת עם יום עבודה של שבע שעות", "מדינה חקלאית שמגדלת את שבעת המינים", "מדינה המבוססת על שבעת ימי בריאת העולם", "מדינה המאחדת את שבע היבשות שבהן פזורים היהודים"], correct: 0 },
+  // 6
+  { q: "מהי ״דילמת הנאמנות הכפולה״ שהטרידה את בן-גוריון בבחירת דגל המדינה?", options: ["החשש שיהודי התפוצות הנושאים דגל זהה ייחשדו בנאמנות למדינה זרה", "החשש שהדגל ייראה כדגל של מדינה שכנה ויבלבל את העולם", "הצורך להכריע אם הדגל ייצג את הצבא או את האזרחים", "הצורך לבחור בין דגל עם מגן דוד לדגל עם מנורה"], correct: 0 },
+  // 7
+  { q: "איזה שיר ביקש הציבור הדתי לאמץ כהמנון המדינה במקום ״התקווה״?", options: ["שיר המעלות", "ירושלים של זהב", "אנו נושאים לפידים", "הורה מדורה"], correct: 0 },
+  // 8
+  // NOTE: 164 comes from the course material. Some public sources cite other figures
+  // (e.g. ~450 flag designs in the public contest) - keep the number your lesson uses.
+  { q: "כמה הצעות הוגשו בתחרות על הדגל החדש?", options: ["164 הצעות", "12 הצעות", "50 הצעות", "1000 הצעות"], correct: 0 },
+  // 9
+  { q: "איזו שורה החליפה את ״לָשׁוּב לְאֶרֶץ אֲבוֹתֵינוּ, לָעִיר בָּהּ דָּוִד חָנָה״ בנוסח שאנו שרים היום?", options: ["להיות עם חופשי בארצנו, ארץ ציון וירושלים", "לבנות בית מקדש בארצנו, ארץ ציון וירושלים", "לחיות בשלום ובשלווה בארצנו, ארץ ציון וירושלים", "להיות אור לגויים בארצנו, ארץ ציון וירושלים"], correct: 0 },
+  // 10
+  { q: "מה הייחודיות של ההמנון הישראלי?", options: ["הוא שיר געגוע ותקווה של עם בגלות, ללא צבא וללא ניצחון", "הוא ההמנון הקצר בעולם והוא מורכב משורה אחת", "הוא נכתב על ידי ממשלת המדינה לרגל הקמתה", "הוא משבח את שליט המדינה ואת כוחו"], correct: 0 },
+  // 11
+  { q: "מה משותף להמנונים של צרפת (״המרסייז״) ושל סין (״מצעד המתנדבים״)?", options: ["שניהם שירי מלחמה הקוראים לאזרחים להילחם", "שניהם שירי געגוע של עם שנמצא בגלות", "שניהם מבוססים על לחן עממי רומני", "שניהם נכתבו בידי משוררים יהודים"], correct: 0 },
+  // 12
+  { q: "מהי ״המנגינה הנודדת״ של ״התקווה״?", options: ["לחן שנדד בין תרבויות וארצות באירופה לפני שהפך להמנון", "לחן שהלחין שמואל כהן בזמן נדודיו בארץ ישראל", "לחן ליטורגי עתיק שנשמר בבתי הכנסת לאורך הדורות", "לחן שהושמע בכל קונגרס ציוני בעיר אחרת"], correct: 0 }
+];
+
+const historicalFigures = [
+  "בנימין זאב הרצל", "חיים ויצמן", "דוד בן-גוריון", "גולדה מאיר", "זאב ז'בוטינסקי",
+  "אליעזר בן-יהודה", "שרה אהרנסון", "יוסף טרומפלדור", "רחל המשוררת", "חיים נחמן ביאליק",
+  "מנחם בגין", "יצחק רבין", "משה דיין", "אבא אבן", "הרב אברהם קוק",
+  "הנרייטה סאלד", "משה שרת", "יצחק בן-צבי", "אליהו חכים", "חנה סנש",
+  "אבא קובנר", "מאיר דיזנגוף", "יגאל ידין", "הרב שלמה גורן", "אחד העם"
+];
+
+const doorValues = [150, 200, "STEAL", 300, 50, -50, 250, 100, -150, 400, 300, "DOUBLE", 150, 500, -100, 200, 100, -50, 250, 300, 150, -200, 100, 200, 350];
+
+const TOTAL_QUESTIONS = triviaQuestions.length;
+const TOTAL_DOORS = doorValues.length;
+const QUESTION_SECONDS = 15;
+const HOST_GRACE_SECONDS = 5;
+const STEAL_AMOUNT = 150;
+const TEAMS = {
+  zionist: { name: "התנועה הציונית", short: "ציונית", icon: "🔵", color: "#2563eb" },
+  brigade: { name: "הבריגדה היהודית", short: "בריגדה", icon: "🟠", color: "#ea580c" }
+};
+
+if (historicalFigures.length !== TOTAL_DOORS) console.error("historicalFigures and doorValues must have the same length");
+
+/* ------------------------------------------------------------------ *
+ * Small helpers
+ * ------------------------------------------------------------------ */
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const otherTeam = t => (t === 'zionist' ? 'brigade' : 'zionist');
+const isTeam = t => t === 'zionist' || t === 'brigade';
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function sanitizeName(s) {
+  return String(s || '').replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 30);
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+// localStorage / sessionStorage can throw (private mode) - never let that break the game
+function makeStore(kind) {
+  const get = () => { try { return window[kind]; } catch { return null; } };
+  return {
+    get(k) { try { return get().getItem(k); } catch { return null; } },
+    set(k, v) { try { get().setItem(k, v); } catch { /* ignore */ } },
+    del(k) { try { get().removeItem(k); } catch { /* ignore */ } }
+  };
+}
+const lstore = makeStore('localStorage');
+const sstore = makeStore('sessionStorage');
+
+let toastTimer = null;
+function toast(msg, type = 'info') {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function onErr(e) {
+  console.error(e);
+  toast('שגיאת תקשורת עם השרת. בדוק חיבור ונסה שוב.', 'error');
+}
+
+function updateConn() { $('conn-banner').classList.toggle('show', !navigator.onLine); }
+window.addEventListener('online', updateConn);
+window.addEventListener('offline', updateConn);
+
+/* ------------------------------------------------------------------ *
+ * Identity (device id)
+ * ------------------------------------------------------------------ */
+function makeDeviceId() {
+  try {
+    const b = new Uint8Array(12);
+    crypto.getRandomValues(b);
+    return 'dev_' + Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+  } catch {
+    return 'dev_' + Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 12);
+  }
+}
+let deviceId = lstore.get('haim_game_device_id');
+if (!deviceId) { deviceId = makeDeviceId(); lstore.set('haim_game_device_id', deviceId); }
+
+/* ------------------------------------------------------------------ *
+ * Audio (created lazily on first user gesture; mutable)
+ * ------------------------------------------------------------------ */
+const WRONG_SOUND_B64 = "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";
+let wrongBuffer = null, wrongLoading = false;
+let audioCtx = null;
+let muted = lstore.get('haim_game_muted') === '1';
+let musicOsc = null, musicGain = null, musicTimer = null, isMusicPlaying = false;
+
+function loadWrongBuffer(ctx) {
+  if (wrongBuffer || wrongLoading) return;
+  wrongLoading = true;
+  try {
+    const bin = atob(WRONG_SOUND_B64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    ctx.decodeAudioData(bytes.buffer, buf => { wrongBuffer = buf; wrongLoading = false; }, () => { wrongLoading = false; });
+  } catch (e) { wrongLoading = false; console.error(e); }
+}
+
+function ensureAudio() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    audioCtx = new AC();
+    loadWrongBuffer(audioCtx);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function updateMuteBtn() { $('mute-btn').textContent = muted ? '🔇' : '🔊'; }
+function updateMusicBtn() {
+  const b = $('music-btn');
+  if (b) b.textContent = isMusicPlaying ? '🔇 הפסק מוזיקה' : '🎵 מוזיקת מתח';
+}
+
+function startMusic() {
+  const ctx = ensureAudio();
+  if (!ctx || muted || isMusicPlaying) return;
+  musicOsc = ctx.createOscillator();
+  musicGain = ctx.createGain();
+  musicOsc.type = 'sine';
+  musicOsc.frequency.value = 60;
+  musicGain.gain.setValueAtTime(0.001, ctx.currentTime);
+  musicGain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 2);
+  musicOsc.connect(musicGain);
+  musicGain.connect(ctx.destination);
+  const pulse = () => {
+    if (!musicOsc) return;
+    const t = ctx.currentTime;
+    musicOsc.frequency.cancelScheduledValues(t);
+    musicOsc.frequency.setValueAtTime(60, t);
+    musicOsc.frequency.exponentialRampToValueAtTime(65, t + 0.5);
+    musicOsc.frequency.exponentialRampToValueAtTime(60, t + 1);
+  };
+  pulse();
+  musicTimer = setInterval(pulse, 1000);
+  musicOsc.start();
+  isMusicPlaying = true;
+}
+
+function stopMusic() {
+  if (!isMusicPlaying) return;
+  clearInterval(musicTimer);
+  musicTimer = null;
+  const osc = musicOsc, g = musicGain, ctx = audioCtx;
+  musicOsc = null; musicGain = null; isMusicPlaying = false;
+  try {
+    g.gain.cancelScheduledValues(ctx.currentTime);
+    g.gain.setValueAtTime(Math.max(g.gain.value, 0.001), ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1);
+    osc.stop(ctx.currentTime + 1.05);
+  } catch { /* already stopped */ }
+}
+
+window.toggleEpicMusic = function () {
+  if (isMusicPlaying) stopMusic(); else startMusic();
+  updateMusicBtn();
+};
+
+window.toggleMute = function () {
+  muted = !muted;
+  lstore.set('haim_game_muted', muted ? '1' : '0');
+  if (muted) { stopMusic(); updateMusicBtn(); }
+  updateMuteBtn();
+};
+
+function playSound(type) {
+  if (muted) return;
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  if (type === 'wrong') {
+    if (wrongBuffer) {
+      const src = ctx.createBufferSource();
+      src.buffer = wrongBuffer;
+      src.connect(ctx.destination);
+      src.start();
+    } else {
+      playSound('error'); // fallback until the custom sound has finished decoding
+    }
+    return;
+  }
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  const now = ctx.currentTime;
+  const end = d => { gain.gain.exponentialRampToValueAtTime(0.001, now + d); osc.start(now); osc.stop(now + d); };
+
+  if (type === 'success') {
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.setValueAtTime(554.37, now + 0.1);
+    osc.frequency.setValueAtTime(659.25, now + 0.2);
+    gain.gain.setValueAtTime(0.3, now); end(0.5);
+  } else if (type === 'error') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, now);
+    osc.frequency.setValueAtTime(150, now + 0.15);
+    gain.gain.setValueAtTime(0.3, now); end(0.4);
+  } else if (type === 'click') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, now);
+    gain.gain.setValueAtTime(0.1, now); end(0.05);
+  } else if (type === 'reveal') {
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(300, now);
+    osc.frequency.setValueAtTime(450, now + 0.15);
+    osc.frequency.setValueAtTime(600, now + 0.3);
+    gain.gain.setValueAtTime(0.2, now); end(0.8);
+  } else if (type === 'tick') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1000, now);
+    gain.gain.setValueAtTime(0.05, now); end(0.03);
+  }
+}
+
+function burst(opts) {
+  if (typeof confetti === 'function' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    confetti(opts);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * App state
+ * ------------------------------------------------------------------ */
+function freshState() {
+  return {
+    phase: 'waiting',
+    keysZionist: 0, keysBrigade: 0,
+    scoreZionist: 0, scoreBrigade: 0,
+    currentQuestionIndex: 0,
+    roundId: 0,
+    questionAnswered: false,
+    lastResult: null, lastChoice: null,
+    lastChosenTeam: 'brigade',
+    targetCadetId: null, targetCadetName: null, targetTeam: null,
+    optionOrder: [0, 1, 2, 3],
+    askedIds: [],
+    pendingAnswer: null,
+    openedDoors: {}, selectedDoors: {}, selectedOrder: [],
+    winner: null, finalZ: 0, finalB: 0,
+    updatedAt: Date.now()
+  };
+}
+
+let isHost = false;
+let myProfile = null;          // {name, team} for cadets
+let latestState = null;
+let latestPlayers = [];
+let unsubs = [];
+window.selectedTeam = null;
+
+// host-local
+let picking = false;
+let revealing = false;
+let gameEpoch = 0;
+let watchdogTimer = null, watchdogRound = 0;
+let autoFinishTimer = null;
+let pendingFlip = -1;
+let victoryShown = false;
+let wrongSoundRound = 0;
+const resolving = new Set();
+
+// cadet-local
+let questionTimer = null;
+let renderedRound = 0, answeredRound = 0, feedbackShownRound = 0;
+let joined = false, joining = false;
+
+const ROLE_KEY = 'haim_game_role';
+const PROFILE_KEY = 'haim_game_profile';
+
+function showPanel(panelId) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  $(panelId).classList.add('active');
+}
+
+function stopListeners() {
+  unsubs.forEach(u => { try { u(); } catch { /* ignore */ } });
+  unsubs = [];
+}
+
+function clearHostTimers() {
+  clearTimeout(watchdogTimer); watchdogTimer = null; watchdogRound = 0;
+  clearTimeout(autoFinishTimer); autoFinishTimer = null;
+}
+
+function stopQuestionTimer() {
+  if (questionTimer) { clearInterval(questionTimer); questionTimer = null; }
+}
+
+function resetCadetLocal() {
+  stopQuestionTimer();
+  renderedRound = 0; answeredRound = 0; feedbackShownRound = 0;
+}
+
+/* ------------------------------------------------------------------ *
+ * Role / navigation
+ * ------------------------------------------------------------------ */
+window.enterHostMode = function () {
+  playSound('click');
+  stopListeners();
+  isHost = true;
+  myProfile = null;
+  joined = false;
+  document.body.classList.add('is-host');
+  sstore.set(ROLE_KEY, 'host');
+  $('join-link-text').textContent = location.href.split('#')[0];
+  showPanel('host-panel');
+  updateMusicBtn();
+  listenPlayers();
+  listenState();
+};
+
+window.enterCadetMode = function () {
+  playSound('click');
+  isHost = false;
+  document.body.classList.remove('is-host');
+  sstore.del(ROLE_KEY);
+  const saved = readProfile();
+  if (saved) {
+    $('cadet-name').value = saved.name;
+    window.selectTeam(saved.team, true);
+  }
+  showPanel('cadet-join-panel');
+};
+
+window.backToRoleSelect = function () {
+  playSound('click');
+  showPanel('role-panel');
+};
+
+window.copyJoinLink = function () {
+  const url = location.href.split('#')[0];
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => toast('הקישור הועתק', 'success')).catch(() => toast('לא הצלחתי להעתיק, העתק ידנית', 'error'));
+  } else {
+    toast('העתק ידנית את הקישור', 'info');
+  }
+};
+
+function readProfile() {
+  try {
+    const p = JSON.parse(lstore.get(PROFILE_KEY) || 'null');
+    if (p && typeof p.name === 'string' && isTeam(p.team)) return { name: sanitizeName(p.name), team: p.team };
+  } catch { /* ignore */ }
+  return null;
+}
+
+window.selectTeam = function (team, silent) {
+  if (!isTeam(team)) return;
+  window.selectedTeam = team;
+  if (!silent) playSound('click');
+  ['zionist', 'brigade'].forEach(t => {
+    const b = $('box-' + t);
+    b.classList.toggle('selected', team === t);
+    b.setAttribute('aria-pressed', team === t ? 'true' : 'false');
+  });
+};
+
+/* ------------------------------------------------------------------ *
+ * Cadet: join / leave / resume
+ * ------------------------------------------------------------------ */
+window.joinGameSubmit = async function () {
+  if (joining) return;
+  const name = sanitizeName($('cadet-name').value);
+  if (name.length < 2) return toast('אנא הכנס את שמך המלא (לפחות 2 תווים)', 'error');
+  if (!isTeam(window.selectedTeam)) return toast('אנא בחר קבוצה!', 'error');
+
+  joining = true;
+  $('join-btn').disabled = true;
+  playSound('click');
+  try {
+    const snap = await getDocs(PLAYERS);
+    let dup = false;
+    snap.forEach(x => {
+      if (x.id !== deviceId && String(x.data().name || '').toLowerCase() === name.toLowerCase()) dup = true;
+    });
+    if (dup) return toast('השם כבר תפוס במשחק. הוסף שם משפחה או כינוי.', 'error');
+
+    await setDoc(doc(db, "players", deviceId), { name, team: window.selectedTeam, joinedAt: Date.now() }, { merge: true });
+    myProfile = { name, team: window.selectedTeam };
+    lstore.set(PROFILE_KEY, JSON.stringify(myProfile));
+    enterCadetGame();
+  } catch (e) {
+    onErr(e);
+  } finally {
+    joining = false;
+    $('join-btn').disabled = false;
+  }
+};
+
+function enterCadetGame() {
+  stopListeners();
+  resetCadetLocal();
+  isHost = false;
+  joined = true;
+  document.body.classList.remove('is-host');
+  sstore.del(ROLE_KEY);
+
+  const badge = $('cadet-team-badge');
+  badge.className = 'team-badge ' + myProfile.team;
+  badge.textContent = `${TEAMS[myProfile.team].icon} ${myProfile.name} · ${TEAMS[myProfile.team].name}`;
+
+  showPanel('cadet-waiting-panel');
+  $('cadet-main-title').textContent = `שלום ${myProfile.name}!`;
+  $('cadet-status-text').textContent = 'מחובר בהצלחה לקבוצה! ממתין שהמארח יתחיל את המשחק...';
+  $('cadet-feedback-area').textContent = '';
+  $('cadet-question-container').style.display = 'none';
+  $('cadet-spinner').style.display = 'block';
+
+  listenState();
+  // if the host deletes our player record (reset), send us back to the join screen
+  unsubs.push(onSnapshot(doc(db, "players", deviceId), snap => {
+    if (!snap.exists() && joined && !snap.metadata.hasPendingWrites) {
+      kickedBack('המשחק אופס על ידי המארח. אפשר להצטרף מחדש.');
+    }
+  }, onErr));
+}
+
+function kickedBack(msg) {
+  joined = false;
+  stopListeners();
+  resetCadetLocal();
+  myProfile = null;
+  const saved = readProfile();
+  if (saved) { $('cadet-name').value = saved.name; window.selectTeam(saved.team, true); }
+  showPanel('cadet-join-panel');
+  toast(msg, 'info');
+}
+
+window.leaveGame = async function () {
+  playSound('click');
+  joined = false;
+  stopListeners();
+  resetCadetLocal();
+  try { await deleteDoc(doc(db, "players", deviceId)); } catch (e) { console.error(e); }
+  myProfile = null;
+  showPanel('role-panel');
+};
+
+async function bootstrap() {
+  updateMuteBtn();
+  updateConn();
+  if (sstore.get(ROLE_KEY) === 'host') { window.enterHostMode(); return; }
+  const prof = readProfile();
+  if (prof) {
+    try {
+      const s = await getDoc(doc(db, "players", deviceId));
+      if (s.exists() && isTeam(s.data().team)) {
+        myProfile = { name: sanitizeName(s.data().name) || prof.name, team: s.data().team };
+        enterCadetGame();
+      }
+    } catch (e) { console.error(e); }
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Listeners
+ * ------------------------------------------------------------------ */
+function listenState() {
+  unsubs.push(onSnapshot(STATE_REF, snap => {
+    if (!snap.exists()) {
+      if (isHost) setDoc(STATE_REF, freshState()).catch(onErr);
+      return;
+    }
+    latestState = snap.data();
+    handleState(latestState);
+  }, onErr));
+}
+
+function listenPlayers() {
+  unsubs.push(onSnapshot(PLAYERS, snap => {
+    const list = [];
+    snap.forEach(d => {
+      const v = d.data();
+      if (isTeam(v.team)) list.push({ id: d.id, name: sanitizeName(v.name) || '?', team: v.team, joinedAt: v.joinedAt || 0 });
+    });
+    list.sort((a, b) => a.joinedAt - b.joinedAt);
+    latestPlayers = list;
+    renderHostPlayers();
+  }, onErr));
+}
+
+function fillList(id, names) {
+  const box = $(id);
+  box.textContent = '';
+  const ul = document.createElement('ul');
+  if (!names.length) ul.append(el('li', '', 'אין צוערים מחוברים'));
+  else names.forEach(n => ul.append(el('li', '', n)));
+  box.append(ul);
+}
+
+function renderHostPlayers() {
+  const z = latestPlayers.filter(p => p.team === 'zionist');
+  const b = latestPlayers.filter(p => p.team === 'brigade');
+  $('count-zionist').textContent = z.length;
+  $('count-brigade').textContent = b.length;
+  fillList('list-zionist', z.map(p => p.name));
+  fillList('list-brigade', b.map(p => p.name));
+  const ok = z.length >= 1 && b.length >= 1;
+  $('start-btn').disabled = !ok;
+  $('host-warning').style.display = ok ? 'none' : 'block';
+}
+
+/* ------------------------------------------------------------------ *
+ * Shared rendering
+ * ------------------------------------------------------------------ */
+function updateTugOfWar(zScore, bScore, prefix = "") {
+  const pz = Math.max(zScore, 0), pb = Math.max(bScore, 0);
+  let zPct = 50;
+  if (zScore === bScore) zPct = 50;
+  else if (pz + pb > 0) zPct = Math.max(10, Math.min(90, (pz / (pz + pb)) * 100));
+  else zPct = zScore > bScore ? 70 : 30;
+
+  const tz = $(prefix + 'tug-zionist');
+  const tb = $(prefix + 'tug-brigade');
+  if (tz) { tz.style.width = zPct + "%"; tz.textContent = `ציונית ${zScore}`; }
+  if (tb) { tb.style.width = (100 - zPct) + "%"; tb.textContent = `${bScore} בריגדה`; }
+}
+
+function handleState(d) {
+  try {
+    const kz = d.keysZionist || 0, kb = d.keysBrigade || 0;
+    const sz = d.scoreZionist || 0, sb = d.scoreBrigade || 0;
+
+    $('wall-keys-zionist').textContent = kz;
+    $('wall-keys-brigade').textContent = kb;
+    updateTugOfWar(kz, kb, "");
+    updateTugOfWar(sz, sb, "wall-");
+
+    if (isHost) {
+      renderHost(d);
+    } else {
+      if (d.phase === 'trivia' || d.phase === 'waiting') {
+        updateTugOfWar(kz, kb, "cadet-");
+        $('cadet-tug-caption').textContent = 'מפתחות שנצברו';
+      } else {
+        updateTugOfWar(sz, sb, "cadet-");
+        $('cadet-tug-caption').textContent = 'ניקוד';
+      }
+      renderCadet(d);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function resultText(d) {
+  const name = d.targetCadetName || 'הצוער';
+  if (d.lastResult === 'correct') return `✅ ${name} ענה/תה נכון!`;
+  if (d.lastResult === 'timeout') return `⏰ לא נענתה תשובה בזמן (${name})`;
+  return `❌ התשובה של ${name} שגויה`;
+}
+
+/* ------------------------------------------------------------------ *
+ * HOST rendering
+ * ------------------------------------------------------------------ */
+function renderHost(d) {
+  if (d.phase !== 'trivia') { clearTimeout(watchdogTimer); watchdogTimer = null; watchdogRound = 0; }
+  if (d.phase !== 'wall') { clearTimeout(autoFinishTimer); autoFinishTimer = null; }
+  if (d.phase !== 'victory') victoryShown = false;
+  if (d.phase !== 'trivia' && isMusicPlaying && d.phase !== 'waiting') { stopMusic(); updateMusicBtn(); }
+
+  switch (d.phase) {
+    case 'waiting': showPanel('host-panel'); break;
+    case 'trivia': showPanel('host-trivia-panel'); renderHostTrivia(d); break;
+    case 'wall': showPanel('wall-panel'); renderWallGrid(d); break;
+    case 'victory': showPanel('victory-panel'); renderVictory(d); break;
+    default: break;
+  }
+}
+
+function setAnnouncement(prefix, name, team) {
+  const box = $('target-cadet-announcement');
+  box.textContent = '';
+  box.append(prefix + ' ');
+  if (name !== undefined) box.append(el('span', 'target-name', name));
+  if (team && TEAMS[team]) box.append(` (${TEAMS[team].short} ${TEAMS[team].icon})`);
+}
+
+function renderHostTrivia(d) {
+  if (picking) return; // the roulette animation owns the screen
+  const qIdx = d.currentQuestionIndex || 0;
+  const q = triviaQuestions[qIdx];
+  const nextBtn = $('next-round-btn'), skipBtn = $('skip-btn');
+  const isLast = qIdx >= TOTAL_QUESTIONS - 1;
+  $('trivia-panel-heading').textContent = `שאלת הפתעה ${qIdx + 1} מתוך ${TOTAL_QUESTIONS}`;
+
+  const ready = d.roundId > 0 && !!d.targetCadetId && !!q;
+  if (!ready) {
+    $('target-cadet-announcement').textContent = 'מגריל צוער...';
+    $('live-question-box').textContent = 'טוען שאלה...';
+    nextBtn.disabled = true; nextBtn.textContent = 'ממתין...';
+    skipBtn.disabled = true;
+    return;
+  }
+
+  setAnnouncement('🎯 תורו של:', d.targetCadetName || '?', d.targetTeam);
+
+  const box = $('live-question-box');
+  box.textContent = '';
+  box.append(el('div', 'live-q', q.q));
+  const grid = el('div', 'live-opts');
+  const order = Array.isArray(d.optionOrder) && d.optionOrder.length === q.options.length ? d.optionOrder : q.options.map((_, i) => i);
+  order.forEach(orig => {
+    const o = el('div', 'live-opt', q.options[orig]);
+    if (d.questionAnswered) {
+      if (orig === q.correct) o.classList.add('correct');
+      else if (orig === d.lastChoice) o.classList.add('wrong');
+    }
+    grid.append(o);
+  });
+  box.append(grid);
+  if (d.questionAnswered) box.append(el('div', 'live-result', resultText(d)));
+
+  nextBtn.disabled = !d.questionAnswered;
+  nextBtn.textContent = d.questionAnswered
+    ? (isLast ? "מעבר לקיר הגורלות 🏛️" : "הגרל צוער לשאלה הבאה ➡")
+    : "ממתין לתשובת הצוער...";
+  skipBtn.disabled = !!d.questionAnswered;
+
+  if (d.questionAnswered && d.lastResult !== 'correct' && wrongSoundRound !== d.roundId) {
+    wrongSoundRound = d.roundId;
+    if (Date.now() - (d.updatedAt || 0) < 8000) playSound('wrong'); // not on a mere page reload
+  }
+
+  // The host is the authority: it validates the cadet's answer and updates the keys.
+  const pa = d.pendingAnswer;
+  if (!d.questionAnswered && pa && pa.roundId === d.roundId && pa.by === d.targetCadetId) {
+    resolveRound(d.roundId, pa.choice, pa.by);
+  }
+  armWatchdog(d);
+}
+
+function armWatchdog(d) {
+  if (d.questionAnswered) { clearTimeout(watchdogTimer); watchdogTimer = null; watchdogRound = 0; return; }
+  if (watchdogRound === d.roundId) return;
+  clearTimeout(watchdogTimer);
+  watchdogRound = d.roundId;
+  const rid = d.roundId;
+  watchdogTimer = setTimeout(() => resolveRound(rid, -1, null), (QUESTION_SECONDS + HOST_GRACE_SECONDS) * 1000);
+}
+
+async function resolveRound(roundId, choice, by) {
+  if (!isHost || resolving.has(roundId)) return;
+  resolving.add(roundId);
+  try {
+    await runTransaction(db, async tx => {
+      const snap = await tx.get(STATE_REF);
+      const d = snap.data();
+      if (!d || d.phase !== 'trivia' || d.roundId !== roundId || d.questionAnswered) return;
+      if (by && by !== d.targetCadetId) return;
+      const q = triviaQuestions[d.currentQuestionIndex];
+      const valid = Number.isInteger(choice) && choice >= 0 && choice < q.options.length;
+      const c = valid ? choice : -1;
+      const correct = c === q.correct;
+      const upd = {
+        questionAnswered: true,
+        lastResult: correct ? 'correct' : (c < 0 ? 'timeout' : 'wrong'),
+        lastChoice: c,
+        updatedAt: Date.now()
+      };
+      if (correct) {
+        if (d.targetTeam === 'zionist') upd.keysZionist = (d.keysZionist || 0) + 1;
+        else upd.keysBrigade = (d.keysBrigade || 0) + 1;
+      }
+      tx.update(STATE_REF, upd);
+    });
+  } catch (e) {
+    onErr(e);
+  } finally {
+    resolving.delete(roundId);
+  }
+}
+
+window.skipQuestion = function () {
+  if (!isHost) return;
+  const d = latestState;
+  if (d && d.phase === 'trivia' && !d.questionAnswered && d.roundId > 0) {
+    playSound('click');
+    resolveRound(d.roundId, -1, null);
+  }
+};
+
+window.startTriviaPhase = async function () {
+  if (!isHost || picking) return;
+  playSound('click');
+  const z = latestPlayers.filter(p => p.team === 'zionist').length;
+  const b = latestPlayers.filter(p => p.team === 'brigade').length;
+  if (z < 1 || b < 1) return toast('נדרש לפחות צוער אחד בכל קבוצה!', 'error');
+  try {
+    gameEpoch++;
+    wrongSoundRound = 0;
+    await setDoc(STATE_REF, { ...freshState(), phase: 'trivia' });
+    pickBalancedCadet(0);
+  } catch (e) { onErr(e); }
+};
+
+async function pickBalancedCadet(qIdx) {
+  if (!isHost || picking) return;
+  picking = true;
+  const epoch = gameEpoch;
+  const nextBtn = $('next-round-btn'), skipBtn = $('skip-btn');
+  try {
+    nextBtn.disabled = true; skipBtn.disabled = true;
+    const [pSnap, sSnap] = await Promise.all([getDocs(PLAYERS), getDoc(STATE_REF)]);
+    const list = [];
+    pSnap.forEach(x => {
+      const v = x.data();
+      if (isTeam(v.team)) list.push({ id: x.id, name: sanitizeName(v.name) || '?', team: v.team });
+    });
+    if (!list.length) { toast('אין צוערים מחוברים', 'error'); return; }
+
+    const st = sSnap.data() || {};
+    let team = otherTeam(st.lastChosenTeam || 'brigade');
+    let teamPlayers = list.filter(p => p.team === team);
+    if (!teamPlayers.length) { team = otherTeam(team); teamPlayers = list.filter(p => p.team === team); }
+
+    // nobody is asked twice until everyone in their team has had a turn
+    const asked = new Set(st.askedIds || []);
+    let candidates = teamPlayers.filter(p => !asked.has(p.id));
+    if (!candidates.length) { teamPlayers.forEach(p => asked.delete(p.id)); candidates = teamPlayers; }
+    const chosen = pick(candidates);
+
+    $('live-question-box').textContent = 'מגרילים צוער...';
+    for (let i = 0; i < 16; i++) {
+      if (epoch !== gameEpoch) return; // game was reset meanwhile
+      setAnnouncement('🎯 הגרלה:', pick(candidates).name);
+      playSound('tick');
+      await sleep(120);
+    }
+    if (epoch !== gameEpoch) return;
+    playSound('reveal');
+    asked.add(chosen.id);
+    const q = triviaQuestions[qIdx];
+
+    await runTransaction(db, async tx => {
+      const s = await tx.get(STATE_REF);
+      const d = s.data();
+      if (!d || d.phase !== 'trivia' || epoch !== gameEpoch) return;
+      tx.update(STATE_REF, {
+        currentQuestionIndex: qIdx,
+        roundId: (d.roundId || 0) + 1,
+        targetCadetId: chosen.id,
+        targetCadetName: chosen.name,
+        targetTeam: chosen.team,
+        lastChosenTeam: chosen.team,
+        questionAnswered: false,
+        lastResult: null,
+        lastChoice: null,
+        pendingAnswer: null,
+        optionOrder: shuffle(q.options.map((_, i) => i)),
+        askedIds: [...asked],
+        updatedAt: Date.now()
+      });
+    });
+  } catch (e) {
+    onErr(e);
+  } finally {
+    picking = false;
+    if (latestState && isHost) handleState(latestState);
+  }
+}
+
+window.nextTriviaRound = async function () {
+  if (!isHost || picking) return;
+  playSound('click');
+  const d = latestState;
+  if (!d || d.phase !== 'trivia' || !d.questionAnswered) return;
+  const idx = d.currentQuestionIndex || 0;
+  if (idx + 1 >= TOTAL_QUESTIONS) {
+    try {
+      // updateDoc replaces the whole field value, so the maps are really cleared
+      await updateDoc(STATE_REF, { phase: 'wall', openedDoors: {}, selectedDoors: {}, selectedOrder: [], updatedAt: Date.now() });
+    } catch (e) { onErr(e); }
+  } else {
+    pickBalancedCadet(idx + 1);
+  }
+};
+
+/* ---------------- Wall of fates ---------------- */
+function setDoorText(door, main, sub) {
+  door.textContent = '';
+  door.append(el('strong', '', main));
+  if (sub) { door.append(document.createElement('br')); door.append(el('small', '', sub)); }
+}
+
+function nextDoorToReveal(d) {
+  const opened = d.openedDoors || {};
+  const selected = d.selectedDoors || {};
+  const order = Array.isArray(d.selectedOrder) && d.selectedOrder.length
+    ? d.selectedOrder
+    : Object.keys(selected).map(Number).sort((a, b) => a - b);
+  return order.find(i => selected[i] !== undefined && opened[i] === undefined);
+}
+
+function renderWallGrid(d) {
+  const grid = $('fates-grid');
+  if (!grid) return;
+  grid.textContent = '';
+
+  const zKeys = d.keysZionist || 0, bKeys = d.keysBrigade || 0;
+  const opened = d.openedDoors || {};
+  const selected = d.selectedDoors || {};
+
+  let zSel = 0, bSel = 0;
+  Object.values(selected).forEach(t => { if (t === 'zionist') zSel++; if (t === 'brigade') bSel++; });
+  const remaining = Object.keys(selected).filter(i => opened[i] === undefined).length;
+  const openedCount = Object.keys(opened).length;
+
+  const zDone = zSel >= zKeys, bDone = bSel >= bKeys;
+  let turnTeam = null;
+  if (!zDone && !bDone) turnTeam = zSel <= bSel ? 'zionist' : 'brigade';
+  else if (!zDone) turnTeam = 'zionist';
+  else if (!bDone) turnTeam = 'brigade';
+
+  const totalPicked = Object.keys(selected).length;
+  const prog = $('wall-progress');
+  prog.textContent = '';
+  [['zionist', zSel, zKeys], ['brigade', bSel, bKeys]].forEach(([t, sel, keys]) => {
+    const card = el('div', 'wp-card ' + t + (turnTeam === t ? ' active' : ''));
+    card.append(el('div', 'wp-title', `${TEAMS[t].icon} ${TEAMS[t].name}`));
+    card.append(el('div', 'wp-count', `בחרו ${sel} מתוך ${keys}`));
+    const dots = el('div', 'wp-dots');
+    for (let k = 0; k < keys; k++) dots.append(el('span', 'wp-dot' + (k < sel ? ' filled ' + t : '')));
+    card.append(dots);
+    let note = '';
+    if (turnTeam === t) note = `⬅ התור שלכם! נשארו ${keys - sel} בחירות`;
+    else if (keys === 0) note = 'לא צברו מפתחות';
+    else if (sel >= keys) note = 'הושלם ✔';
+    else note = 'ממתינים לתור...';
+    card.append(el('div', 'wp-note', note));
+    prog.append(card);
+  });
+
+  const instruction = $('wall-status-instruction');
+  instruction.className = 'turn-banner ' + (turnTeam || 'neutral');
+  if (turnTeam) {
+    const used = turnTeam === 'zionist' ? zSel : bSel;
+    const keysT = turnTeam === 'zionist' ? zKeys : bKeys;
+    instruction.textContent = `${TEAMS[turnTeam].icon} תור ${TEAMS[turnTeam].name}: לחצו על דלת כדי לבחור (בחירה ${used + 1} מתוך ${keysT})`;
+  } else if (zKeys + bKeys === 0) {
+    instruction.textContent = 'אף קבוצה לא צברה מפתחות, אז אין דלתות לפתוח.';
+  } else if (remaining > 0) {
+    instruction.textContent = `✅ כל הדלתות נבחרו! נחשפו ${openedCount} מתוך ${totalPicked}. לחצו על "פתח דלת נבחרת הבאה" ✨`;
+  } else {
+    instruction.textContent = `🏁 כל ${totalPicked} הדלתות נחשפו! המנצחת תוכרז בעוד רגע...`;
+  }
+
+  $('reveal-doors-btn').style.display = (!turnTeam && remaining > 0) ? 'inline-block' : 'none';
+  $('finish-btn').style.display = (!turnTeam && remaining === 0) ? 'inline-block' : 'none';
+
+  if (!turnTeam && remaining === 0 && openedCount > 0 && !autoFinishTimer) {
+    autoFinishTimer = setTimeout(() => { autoFinishTimer = null; window.finishGame(); }, 5000);
+  }
+
+  const pickNo = {};
+  const cnt = { zionist: 0, brigade: 0 };
+  (Array.isArray(d.selectedOrder) && d.selectedOrder.length ? d.selectedOrder : Object.keys(selected).map(Number).sort((x, y) => x - y))
+    .forEach(idx => { const t = selected[idx]; if (t) { cnt[t]++; pickNo[idx] = cnt[t]; } });
+
+  for (let i = 0; i < TOTAL_DOORS; i++) {
+    const scene = el('div', 'door-scene');
+    const door = document.createElement('button');
+    door.type = 'button';
+    door.className = 'door';
+    door.id = `door-${i}`;
+
+    if (opened[i] !== undefined) {
+      const val = doorValues[i];
+      const owner = TEAMS[opened[i]] ? TEAMS[opened[i]].icon : '';
+      door.classList.add('opened', 'locked');
+      door.tabIndex = -1;
+      if (i === pendingFlip) { door.classList.add('flip-in'); pendingFlip = -1; }
+      if (val === "STEAL") {
+        door.classList.add('special');
+        setDoorText(door, `${owner} שוד קלפים!`, `+${STEAL_AMOUNT} לכם, -${STEAL_AMOUNT} ליריב`);
+      } else if (val === "DOUBLE") {
+        door.classList.add('special');
+        setDoorText(door, `${owner} מגן דוד זהב!`, 'ניקוד כפול');
+      } else if (val > 0) {
+        door.classList.add('positive');
+        setDoorText(door, `${owner} ${historicalFigures[i]}`, `+${val} נק'`);
+      } else {
+        door.classList.add('negative');
+        setDoorText(door, `${owner} ${historicalFigures[i]}`, `${val} נק'`);
+      }
+      door.setAttribute('aria-label', `דלת ${i + 1} נפתחה: ${historicalFigures[i]}`);
+    } else {
+      if (selected[i] !== undefined) {
+        door.classList.add(selected[i] === 'zionist' ? 'selected-zionist' : 'selected-brigade');
+        setDoorText(door, `✔ דלת ${i + 1}`, selected[i] === 'zionist' ? '🔵 ציונית' : '🟠 בריגדה');
+        door.append(el('span', 'pick-badge', String(pickNo[i] || '')));
+      } else {
+        setDoorText(door, `דלת ${i + 1}`, historicalFigures[i]);
+      }
+      door.setAttribute('aria-label', `דלת ${i + 1}: ${historicalFigures[i]}`);
+
+      if (turnTeam && (selected[i] === undefined || selected[i] === turnTeam)) {
+        door.onclick = () => window.selectOrDeselectDoor(i, turnTeam);
+        if (selected[i] === undefined) door.classList.add('pickable-' + turnTeam);
+        else door.title = 'לחץ לביטול הבחירה';
+      } else {
+        door.classList.add('locked');
+        door.tabIndex = -1;
+        if (selected[i] === undefined) door.classList.add('dim');
+      }
+    }
+    scene.append(door);
+    grid.append(scene);
+  }
+}
+
+window.selectOrDeselectDoor = async function (doorIdx, team) {
+  if (!isHost || !isTeam(team) || !Number.isInteger(doorIdx) || doorIdx < 0 || doorIdx >= TOTAL_DOORS) return;
+  playSound('click');
+  try {
+    await runTransaction(db, async tx => {
+      const snap = await tx.get(STATE_REF);
+      const d = snap.data();
+      if (!d || d.phase !== 'wall') return;
+      const opened = d.openedDoors || {};
+      const sel = d.selectedDoors || {};
+      if (opened[doorIdx] !== undefined) return;
+
+      if (sel[doorIdx] === team) { // deselect (really deletes the field)
+        tx.update(STATE_REF, { [`selectedDoors.${doorIdx}`]: deleteField(), selectedOrder: arrayRemove(doorIdx) });
+        return;
+      }
+      if (sel[doorIdx] !== undefined) return;
+
+      const keys = team === 'zionist' ? (d.keysZionist || 0) : (d.keysBrigade || 0);
+      const used = Object.values(sel).filter(t => t === team).length;
+      if (used >= keys) throw new Error('KEY_LIMIT');
+      tx.update(STATE_REF, { [`selectedDoors.${doorIdx}`]: team, selectedOrder: arrayUnion(doorIdx) });
+    });
+  } catch (e) {
+    if (e && e.message === 'KEY_LIMIT') toast(`${TEAMS[team].name} בחרה את כל המפתחות שלה!`, 'error');
+    else onErr(e);
+  }
+};
+
+window.revealNextSelectedDoor = async function () {
+  if (!isHost || revealing) return;
+  revealing = true;
+  const btn = $('reveal-doors-btn');
+  if (btn) btn.disabled = true;
+  try {
+    const snap = await getDoc(STATE_REF);
+    if (!snap.exists()) return;
+    const d = snap.data();
+    if (d.phase !== 'wall') return;
+    const next = nextDoorToReveal(d);
+    if (next === undefined) { await window.finishGame(); return; }
+
+    playSound('reveal');
+    const doorEl = $(`door-${next}`);
+    if (doorEl) doorEl.classList.add('rotating');
+    pendingFlip = next;
+    await sleep(450);
+
+    let result = null;
+    await runTransaction(db, async tx => {
+      const s = await tx.get(STATE_REF);
+      const cur = s.data();
+      const opened = cur.openedDoors || {};
+      const sel = cur.selectedDoors || {};
+      if (cur.phase !== 'wall' || opened[next] !== undefined || sel[next] === undefined) return;
+      const team = sel[next];
+      let z = cur.scoreZionist || 0, b = cur.scoreBrigade || 0;
+      const val = doorValues[next];
+      if (val === "STEAL") {
+        if (team === 'zionist') { z += STEAL_AMOUNT; b -= STEAL_AMOUNT; } else { b += STEAL_AMOUNT; z -= STEAL_AMOUNT; }
+      } else if (val === "DOUBLE") {
+        // doubling a negative score would punish the team that found the golden star
+        if (team === 'zionist') { if (z > 0) z *= 2; } else { if (b > 0) b *= 2; }
+      } else if (team === 'zionist') { z += val; } else { b += val; }
+      tx.update(STATE_REF, { [`openedDoors.${next}`]: team, scoreZionist: z, scoreBrigade: b, updatedAt: Date.now() });
+      result = { val };
+    });
+
+    if (result) {
+      if (result.val === "STEAL" || result.val === "DOUBLE") {
+        playSound('success');
+        burst({ particleCount: 90, spread: 70, origin: { y: 0.6 }, colors: ['#fbbf24', '#f59e0b', '#ffffff'] });
+      } else if (result.val > 0) playSound('success');
+      else playSound('error');
+    }
+  } catch (e) {
+    onErr(e);
+  } finally {
+    revealing = false;
+    if (btn) btn.disabled = false;
+    if (latestState && isHost) handleState(latestState);
+  }
+};
+
+window.finishGame = async function () {
+  if (!isHost) return;
+  clearTimeout(autoFinishTimer); autoFinishTimer = null;
+  try {
+    await runTransaction(db, async tx => {
+      const s = await tx.get(STATE_REF);
+      const d = s.data();
+      if (!d || d.phase !== 'wall') return;
+      const z = d.scoreZionist || 0, b = d.scoreBrigade || 0;
+      tx.update(STATE_REF, {
+        phase: 'victory',
+        winner: z > b ? 'zionist' : (b > z ? 'brigade' : 'tie'),
+        finalZ: z, finalB: b, updatedAt: Date.now()
+      });
+    });
+  } catch (e) { onErr(e); }
+};
+
+/* ---------------- Victory (host + cadets) ---------------- */
+function renderVictory(d) {
+  const z = d.finalZ !== undefined && d.winner ? d.finalZ : (d.scoreZionist || 0);
+  const b = d.finalB !== undefined && d.winner ? d.finalB : (d.scoreBrigade || 0);
+  const winner = d.winner || (z > b ? 'zionist' : (b > z ? 'brigade' : 'tie'));
+
+  const ann = $('victory-announcement');
+  ann.textContent = '';
+  if (winner === 'tie') {
+    ann.append('🤝 תיקו! שתי הקבוצות ניצחו!');
+  } else {
+    ann.append('🏆 המנצחת הגדולה והבלתי מעורערת היא:');
+    ann.append(document.createElement('br'), document.createElement('br'));
+    const s = el('span', '', `${TEAMS[winner].name}! ${TEAMS[winner].icon}🎉`);
+    s.style.cssText = `color:${TEAMS[winner].color};font-size:3.5rem;text-shadow:0 5px 15px rgba(0,0,0,0.25);`;
+    ann.append(s);
+  }
+  $('victory-scores').textContent = `🔵 ציונית ${z}  |  ${b} בריגדה 🟠`;
+
+  const note = $('victory-cadet-note');
+  note.textContent = '';
+  if (!isHost && myProfile) {
+    if (winner === 'tie') note.textContent = 'כל הכבוד לשתי הקבוצות!';
+    else if (winner === myProfile.team) note.textContent = '🎊 הקבוצה שלך ניצחה! כל הכבוד!';
+    else note.textContent = 'לא נורא, בפעם הבאה! כל הכבוד על ההשתתפות 👏';
+  }
+  $('victory-wait-note').style.display = isHost ? 'none' : 'block';
+
+  if (!victoryShown) {
+    victoryShown = true;
+    const colors = winner === 'brigade' ? ['#ea580c', '#ffffff', '#fb923c'] : ['#2563eb', '#ffffff', '#60a5fa'];
+    if (isHost) { burst({ particleCount: 300, spread: 120, origin: { y: 0.6 }, colors }); playSound('success'); }
+    else if (myProfile && (winner === myProfile.team || winner === 'tie')) { burst({ particleCount: 150, spread: 100, origin: { y: 0.7 }, colors }); }
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * CADET rendering
+ * ------------------------------------------------------------------ */
+function setCadet(title, status, { spinner = true, question = false } = {}) {
+  $('cadet-main-title').textContent = title;
+  $('cadet-status-text').textContent = status;
+  $('cadet-spinner').style.display = spinner ? 'block' : 'none';
+  $('cadet-question-container').style.display = question ? 'block' : 'none';
+}
+
+function renderCadet(d) {
+  if (!myProfile) return;
+  if (d.phase !== 'trivia') resetCadetLocal();
+  if (d.phase !== 'victory') victoryShown = false;
+
+  switch (d.phase) {
+    case 'waiting':
+      showPanel('cadet-waiting-panel');
+      $('cadet-feedback-area').textContent = '';
+      setCadet(`שלום ${myProfile.name}!`, 'מחובר בהצלחה לקבוצה! ממתין שהמארח יתחיל את המשחק...');
+      break;
+    case 'trivia':
+      showPanel('cadet-waiting-panel');
+      renderCadetTrivia(d);
+      break;
+    case 'wall':
+      showPanel('cadet-waiting-panel');
+      $('cadet-feedback-area').textContent = '';
+      {
+        const mine = myProfile.team;
+        const used = Object.values(d.selectedDoors || {}).filter(t => t === mine).length;
+        const keys = mine === 'zionist' ? (d.keysZionist || 0) : (d.keysBrigade || 0);
+        setCadet('🏛️ קיר הגורלות נפתח!', `הביטו למסך המרכזי! הקבוצה שלכם בחרה ${used} מתוך ${keys} דלתות`);
+      }
+      break;
+    case 'victory':
+      showPanel('victory-panel');
+      renderVictory(d);
+      break;
+    default: break;
+  }
+}
+
+function renderCadetTrivia(d) {
+  const qIdx = d.currentQuestionIndex || 0;
+  const myTurn = d.roundId > 0 && d.targetCadetId === deviceId;
+  const counter = `שאלה ${qIdx + 1} מתוך ${TOTAL_QUESTIONS}`;
+
+  if (myTurn && !d.questionAnswered) {
+    if (answeredRound === d.roundId) {
+      stopQuestionTimer();
+      setCadet('התשובה נשלחה', 'ממתין לאישור המארח...', { spinner: true });
+      return;
+    }
+    if (renderedRound !== d.roundId) {
+      renderedRound = d.roundId;
+      buildCadetQuestion(d);
+      playSound('reveal');
+      if (navigator.vibrate) { try { navigator.vibrate(200); } catch { /* ignore */ } }
+    }
+    setCadet(`❗ השאלה הוגרלה אליך! (${counter})`, '', { spinner: false, question: true });
+    return;
+  }
+
+  stopQuestionTimer();
+  if (myTurn && d.questionAnswered) {
+    showCadetFeedback(d);
+    setCadet('ממתין לסבב הבא...', '');
+  } else if (d.questionAnswered) {
+    $('cadet-feedback-area').textContent = '';
+    setCadet('השאלה הסתיימה, ממתין...', resultText(d));
+  } else {
+    $('cadet-feedback-area').textContent = '';
+    setCadet(`סבב שאלות הפתעה (${counter})`, d.targetCadetName ? `השאלה הוגרלה אל: ${d.targetCadetName}` : 'מגרילים צוער...');
+  }
+}
+
+function buildCadetQuestion(d) {
+  const q = triviaQuestions[d.currentQuestionIndex || 0];
+  $('cadet-feedback-area').textContent = '';
+  $('cadet-q-text').textContent = q.q;
+  const grid = $('cadet-options-grid');
+  grid.textContent = '';
+  const order = Array.isArray(d.optionOrder) && d.optionOrder.length === q.options.length ? d.optionOrder : q.options.map((_, i) => i);
+  order.forEach(orig => {
+    const btn = el('button', 'option-btn', q.options[orig]);
+    btn.type = 'button';
+    btn.onclick = () => submitAnswer(d.roundId, orig, btn);
+    grid.append(btn);
+  });
+  startQuestionTimer(d.roundId);
+}
+
+function startQuestionTimer(roundId) {
+  stopQuestionTimer();
+  let left = QUESTION_SECONDS;
+  const box = $('timer-display');
+  const paint = () => {
+    box.textContent = `⏳ ${left} שניות`;
+    box.classList.toggle('urgent', left <= 5);
+  };
+  paint();
+  questionTimer = setInterval(() => {
+    left--;
+    paint();
+    if (left > 0 && left <= 5) playSound('tick');
+    if (left <= 0) { stopQuestionTimer(); submitAnswer(roundId, -1, null); }
+  }, 1000);
+}
+
+async function submitAnswer(roundId, choice, btn) {
+  if (answeredRound === roundId) return;
+  answeredRound = roundId;
+  stopQuestionTimer();
+  playSound('click');
+  document.querySelectorAll('#cadet-options-grid .option-btn').forEach(b => { b.disabled = true; });
+  if (btn) btn.classList.add('chosen');
+  try {
+    await updateDoc(STATE_REF, { pendingAnswer: { roundId, choice, by: deviceId, at: Date.now() } });
+    setCadet('התשובה נשלחה', 'ממתין לאישור המארח...', { spinner: true });
+  } catch (e) {
+    onErr(e);
+    answeredRound = 0; renderedRound = 0; // let the cadet try again
+    if (latestState) handleState(latestState);
+  }
+}
+
+function showCadetFeedback(d) {
+  if (feedbackShownRound === d.roundId) return;
+  feedbackShownRound = d.roundId;
+  const fa = $('cadet-feedback-area');
+  fa.textContent = '';
+  if (d.lastResult === 'correct') {
+    fa.append(el('div', 'feedback-banner success', '🌟 כל הכבוד! תשובה נכונה! (מפתח נוסף לקבוצה)'));
+    playSound('success');
+    burst({ particleCount: 80, spread: 70, origin: { y: 0.7 } });
+  } else if (d.lastResult === 'timeout') {
+    fa.append(el('div', 'feedback-banner error', '⏰ נגמר הזמן! לא נוסף מפתח.'));
+    playSound('wrong');
+  } else {
+    fa.append(el('div', 'feedback-banner error', '❌ תשובה שגויה.'));
+    playSound('wrong');
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Reset
+ * ------------------------------------------------------------------ */
+window.resetGameServer = async function (keepPlayers = false) {
+  if (!isHost) return;
+  keepPlayers = keepPlayers === true;
+  const msg = keepPlayers
+    ? 'להתחיל משחק חדש עם אותם שחקנים?'
+    : 'האם אתה בטוח שברצונך לאפס את המשחק ולמחוק את כל השחקנים המחוברים?';
+  if (!confirm(msg)) return;
+
+  playSound('click');
+  stopMusic(); updateMusicBtn();
+  gameEpoch++;
+  clearHostTimers();
+  picking = false; revealing = false; pendingFlip = -1; victoryShown = false; wrongSoundRound = 0;
+  resolving.clear();
+  try {
+    await setDoc(STATE_REF, freshState());
+    if (!keepPlayers) {
+      const snap = await getDocs(PLAYERS);
+      const docs = snap.docs;
+      for (let i = 0; i < docs.length; i += 400) {
+        const batch = writeBatch(db);
+        docs.slice(i, i + 400).forEach(x => batch.delete(x.ref));
+        await batch.commit();
+      }
+    }
+    toast(keepPlayers ? 'משחק חדש מוכן!' : 'המשחק אופס', 'success');
+  } catch (e) {
+    onErr(e);
+  }
+};
+
+window.addEventListener('beforeunload', () => { stopMusic(); });
+
+['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => ensureAudio(), { once: true, passive: true }));
+
+bootstrap();
+</script>
+</body>
+</html>
